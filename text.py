@@ -1,37 +1,49 @@
 import streamlit as st
 import requests
+from bs4 import BeautifulSoup
 import pandas as pd
 
 WHO_LIMIT = 25
-API_KEY = "여기에_식품안전나라_API_키_입력"  
 
-st.title("🥤 설탕 섭취량 계산기")
-st.write("음식 이름을 입력하면 자동으로 당류(g)를 불러옵니다.")
+st.title("🥤 설탕 섭취량 계산기 (웹 검색 버전)")
+st.write("음식 이름을 입력하면 네이버 검색에서 당류 정보를 가져옵니다.")
 
 if "records" not in st.session_state:
     st.session_state.records = []
 
-# 음식 입력
+# 사용자 입력
 food = st.text_input("🍪 음식 이름 입력")
 qty = st.number_input("🍽 섭취 개수/횟수", min_value=1, step=1, value=1)
 
 if st.button("검색 및 추가"):
     if food:
-        # 식품안전나라 API 호출
-        url = f"http://openapi.foodsafetykorea.go.kr/api/{API_KEY}/I2790/json/1/5/DESC_KOR={food}"
-        response = requests.get(url).json()
-
         try:
-            item = response["I2790"]["row"][0]
-            sugar = float(item["NUTR_CONT11"])  # 당류(g)
-            
-            st.session_state.records.append({
-                "품목": item["DESC_KOR"],
-                "개수": qty,
-                "총 당류(g)": sugar * qty
-            })
-        except:
-            st.error("⚠️ 해당 음식 정보를 찾을 수 없습니다.")
+            # 네이버 검색 URL
+            url = f"https://search.naver.com/search.naver?query={food}+당류"
+            res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            soup = BeautifulSoup(res.text, "html.parser")
+
+            # 페이지에서 숫자(g) 추출 시도 (단순화된 예시)
+            text = soup.get_text()
+            sugar = None
+            for word in text.split():
+                if "g" in word:
+                    try:
+                        sugar = float(word.replace("g", "").strip())
+                        break
+                    except:
+                        continue
+
+            if sugar:
+                st.session_state.records.append({
+                    "품목": food,
+                    "개수": qty,
+                    "총 당류(g)": sugar * qty
+                })
+            else:
+                st.error("⚠️ 당류 정보를 찾을 수 없습니다. (검색 결과 확인 필요)")
+        except Exception as e:
+            st.error(f"오류 발생: {e}")
     else:
         st.warning("음식 이름을 입력하세요.")
 

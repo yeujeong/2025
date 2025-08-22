@@ -1,46 +1,52 @@
 import streamlit as st
+import requests
 import pandas as pd
 
-# 음식/음료별 평균 당류(g) 데이터 (예시)
-sugar_db = {
-    "콜라 (355ml)": 39,
-    "사이다 (355ml)": 37,
-    "초코바": 20,
-    "아이스크림 (1개)": 24,
-    "쿠키 (1개)": 8,
-    "케이크 조각": 30,
-    "커피믹스 (1봉)": 12,
-    "과일주스 (200ml)": 21,
-}
-
-WHO_LIMIT = 25  # WHO 권장 일일 섭취량 (g)
+WHO_LIMIT = 25
+API_KEY = "여기에_식품안전나라_API_키_입력"  
 
 st.title("🥤 설탕 섭취량 계산기")
-st.write("하루 동안 먹은 음료/과자를 선택하고 개수를 입력하세요.")
+st.write("음식 이름을 입력하면 자동으로 당류(g)를 불러옵니다.")
 
-# 사용자 입력 받기
-user_data = {}
-for item, sugar in sugar_db.items():
-    qty = st.number_input(f"{item} (1개당 {sugar}g 당류)", min_value=0, step=1)
-    if qty > 0:
-        user_data[item] = qty * sugar
+if "records" not in st.session_state:
+    st.session_state.records = []
 
-# 총 섭취량 계산
-total_sugar = sum(user_data.values())
+# 음식 입력
+food = st.text_input("🍪 음식 이름 입력")
+qty = st.number_input("🍽 섭취 개수/횟수", min_value=1, step=1, value=1)
 
-st.subheader("📊 결과")
-st.write(f"오늘 섭취한 총 당류: **{total_sugar} g**")
+if st.button("검색 및 추가"):
+    if food:
+        # 식품안전나라 API 호출
+        url = f"http://openapi.foodsafetykorea.go.kr/api/{API_KEY}/I2790/json/1/5/DESC_KOR={food}"
+        response = requests.get(url).json()
 
-# WHO 권장량과 비교
-if total_sugar == 0:
-    st.info("아직 아무 음식도 선택하지 않았습니다.")
-elif total_sugar <= WHO_LIMIT:
-    st.success(f"👍 권장 섭취량(25g) 이하로 잘 지켰습니다!")
-else:
-    st.error(f"⚠️ 권장 섭취량을 초과했습니다! (25g 기준, 현재 {total_sugar - WHO_LIMIT}g 초과)")
+        try:
+            item = response["I2790"]["row"][0]
+            sugar = float(item["NUTR_CONT11"])  # 당류(g)
+            
+            st.session_state.records.append({
+                "품목": item["DESC_KOR"],
+                "개수": qty,
+                "총 당류(g)": sugar * qty
+            })
+        except:
+            st.error("⚠️ 해당 음식 정보를 찾을 수 없습니다.")
+    else:
+        st.warning("음식 이름을 입력하세요.")
 
-# 상세표 보여주기
-if user_data:
-    st.subheader("🍪 섭취 상세 내역")
-    df = pd.DataFrame(user_data.items(), columns=["품목", "섭취한 당류(g)"])
+# 결과 출력
+if st.session_state.records:
+    df = pd.DataFrame(st.session_state.records)
+    total_sugar = df["총 당류(g)"].sum()
+
+    st.subheader("📊 섭취 내역")
     st.table(df)
+
+    st.subheader("📈 총 섭취량")
+    st.write(f"오늘 섭취한 총 당류: **{total_sugar} g**")
+
+    if total_sugar <= WHO_LIMIT:
+        st.success("👍 WHO 권장 섭취량(25g) 이하로 잘 지켰습니다!")
+    else:
+        st.error(f"⚠️ 권장 섭취량 초과! ({total_sugar - WHO_LIMIT}g 초과)")

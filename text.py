@@ -9,12 +9,15 @@ st.write("개인 신체정보를 입력하면, 맞춤형 설탕 섭취 권장량
 # --------------------------
 # 1. 개인 정보 입력
 # --------------------------
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 with col1:
-    height = st.number_input("📏 키 (cm)", min_value=100, max_value=220, value=170)
+    age = st.number_input("🎂 나이", min_value=5, max_value=120, value=30)
 with col2:
+    height = st.number_input("📏 키 (cm)", min_value=100, max_value=220, value=170)
+with col3:
     weight = st.number_input("⚖️ 몸무게 (kg)", min_value=30, max_value=200, value=65)
 
+# BMI 계산
 bmi = weight / ((height/100) ** 2)
 st.write(f"👉 현재 BMI: **{bmi:.1f}**")
 
@@ -27,6 +30,14 @@ elif 23 <= bmi < 25:
     st.warning("과체중입니다. 당류를 특히 조심해야 합니다.")
 else:
     st.error("비만 단계입니다. 혈당 관리가 매우 중요합니다.")
+
+# 나이에 따른 피드백
+if age < 18:
+    st.warning("아동·청소년은 성장기에 있어 당류 과다 섭취 시 비만 및 당뇨 위험이 큽니다.")
+elif 18 <= age < 65:
+    st.info("성인은 하루 25g 이하의 자유당 섭취를 권장합니다.")
+else:
+    st.warning("노인의 경우 합병증 예방을 위해 당류 섭취에 특히 주의해야 합니다.")
 
 # --------------------------
 # 2. 음식 입력 (웹 검색 크롤링)
@@ -80,7 +91,7 @@ if st.session_state.records:
     st.subheader("📈 총 섭취량")
     st.write(f"오늘 섭취한 총 당류: **{total_sugar} g**")
 
-    # 권장 기준: WHO 기본 25g
+    # 권장 기준 (WHO)
     limit = 25
 
     if total_sugar <= limit:

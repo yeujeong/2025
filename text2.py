@@ -113,10 +113,7 @@ if st.session_state.records:
     progress = min(total_sugar / limit, 1.0)
     st.progress(progress)
 
-    # ✅ 권장량 체크
     if total_sugar <= limit:
         st.success("👍 권장 섭취량 이하로 잘 지켰습니다!")
     else:
-        excess = total_sugar - limit
-        st.error(f"🚨 경고! 권장 섭취량({limit} g)을 초과했습니다!\n\n👉 현재 {excess:.1f} g 초과하였습니다.")
-        st.warning("⚠️ 당류 과다 섭취는 비만, 당뇨, 심혈관 질환 위험을 높일 수 있습니다. 섭취를 줄여주세요.")
+        st.error(f"⚠️ 권장 섭취량({limit} g)을 초과했습니다! ({total_sugar - limit:.1f} g 초과)"

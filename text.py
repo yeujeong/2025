@@ -44,7 +44,7 @@ st.markdown(
 # 제목
 # --------------------------
 st.markdown("<h1 style='text-align: center;'>🥤 하루 권장 설탕 섭취량 계산기</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>개인 신체정보와 생활 조건에 따라 권장 섭취량을 맞춤형으로 확인하세요!</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>개인 조건에 따라 맞춤형 권장 섭취량을 알려드립니다!</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # --------------------------
@@ -75,25 +75,25 @@ else:
     st.error("비만 단계입니다. 혈당 관리가 매우 중요합니다.")
 
 # --------------------------
-# 2. 성별/건강 상태 선택
+# 2. 성별 / 당뇨 여부 입력
 # --------------------------
 st.markdown("### ⚖️ 조건 선택")
 
 col1, col2 = st.columns(2)
 with col1:
-    gender = st.radio("성별", ["남성", "여성", "아동·청소년"])
+    gender = st.radio("성별", ["남성", "여성"])
 with col2:
     diabetes = st.checkbox("당뇨병 환자 여부")
 
 # 권장 섭취량 설정
 if diabetes:
     limit = 15
-elif gender == "남성" and age >= 18:
-    limit = 36
-elif gender == "여성" and age >= 18:
-    limit = 25
-else:  # 아동·청소년
+elif age < 18:
     limit = 20
+elif gender == "남성":
+    limit = 36
+else:
+    limit = 25
 
 st.info(f"💡 당신의 하루 권장 설탕 섭취량은 **{limit} g 이하**입니다.")
 

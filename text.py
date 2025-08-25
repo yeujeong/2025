@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 # 페이지 기본 설정
 # --------------------------
 st.set_page_config(
-    page_title="설탕 섭취량 계산기",
+    page_title="하루 권장 설탕 섭취량 계산기",
     page_icon="🥤",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -43,14 +43,14 @@ st.markdown(
 # --------------------------
 # 제목
 # --------------------------
-st.markdown("<h1 style='text-align: center;'>🥤 맞춤형 설탕 섭취량 계산기</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>개인 신체정보와 섭취 음식을 입력하면 오늘의 설탕 섭취 상태를 알려드립니다!</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🥤 하루 권장 설탕 섭취량 계산기</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>개인 신체정보와 생활 조건에 따라 권장 섭취량을 맞춤형으로 확인하세요!</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # --------------------------
 # 1. 개인 정보 입력
 # --------------------------
-st.markdown("### 👤 개인 신체 정보 입력")
+st.markdown("### 👤 개인 정보 입력")
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -74,18 +74,33 @@ elif 23 <= bmi < 25:
 else:
     st.error("비만 단계입니다. 혈당 관리가 매우 중요합니다.")
 
-# 나이에 따른 피드백
-if age < 18:
-    st.warning("⚠️ 아동·청소년은 성장기에 있어 당류 과다 섭취 시 비만 및 당뇨 위험이 큽니다.")
-elif 18 <= age < 65:
-    st.info("✅ 성인은 하루 25g 이하의 자유당 섭취를 권장합니다.")
-else:
-    st.warning("⚠️ 노인의 경우 합병증 예방을 위해 당류 섭취에 특히 주의해야 합니다.")
+# --------------------------
+# 2. 성별/건강 상태 선택
+# --------------------------
+st.markdown("### ⚖️ 조건 선택")
+
+col1, col2 = st.columns(2)
+with col1:
+    gender = st.radio("성별", ["남성", "여성", "아동·청소년"])
+with col2:
+    diabetes = st.checkbox("당뇨병 환자 여부")
+
+# 권장 섭취량 설정
+if diabetes:
+    limit = 15
+elif gender == "남성" and age >= 18:
+    limit = 36
+elif gender == "여성" and age >= 18:
+    limit = 25
+else:  # 아동·청소년
+    limit = 20
+
+st.info(f"💡 당신의 하루 권장 설탕 섭취량은 **{limit} g 이하**입니다.")
 
 st.markdown("---")
 
 # --------------------------
-# 2. 음식 입력
+# 3. 음식 입력
 # --------------------------
 st.markdown("### 🍽 음식 입력")
 
@@ -132,7 +147,7 @@ if st.button("🔍 검색 & 추가"):
 st.markdown("---")
 
 # --------------------------
-# 3. 결과 출력
+# 4. 결과 출력
 # --------------------------
 if st.session_state.records:
     df = pd.DataFrame(st.session_state.records)
@@ -144,9 +159,6 @@ if st.session_state.records:
     st.markdown("### 📈 총 섭취량")
     st.markdown(f"<div class='result-box'>오늘 섭취한 총 당류: <span class='big-font'>{total_sugar:.1f} g</span></div>", unsafe_allow_html=True)
 
-    # 권장 기준 (WHO)
-    limit = 25
-
     # 프로그레스바 표시
     progress = min(total_sugar / limit, 1.0)
     st.progress(progress)
@@ -154,4 +166,4 @@ if st.session_state.records:
     if total_sugar <= limit:
         st.success("👍 권장 섭취량 이하로 잘 지켰습니다!")
     else:
-        st.error(f"⚠️ 권장 섭취량(25g)을 초과했습니다! ({total_sugar - limit:.1f} g 초과)")
+        st.error(f"⚠️ 권장 섭취량({limit} g)을 초과했습니다! ({total_sugar - limit:.1f} g 초과)")

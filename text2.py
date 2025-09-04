@@ -116,4 +116,4 @@ if st.session_state.records:
     if total_sugar <= limit:
         st.success("👍 권장 섭취량 이하로 잘 지켰습니다!")
     else:
-        st.error(f"⚠️ 권장 섭취량({limit} g)을 초과했습니다! ({total_sugar - limit:.1f} g 초과)"
+        st.error(f"⚠️ 권장 섭취량({limit} g)을 초과했습니다! ({total_sugar - limit:.1f} g 초과)")
